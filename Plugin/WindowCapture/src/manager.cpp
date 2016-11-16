@@ -149,7 +149,7 @@ extern "C"
     try {
       g_manager->get_window(id).render();
     } catch (std::out_of_range&) {
-    } catch (std::runtime_error&) {
+//    } catch (std::runtime_error&) {
     }
   }
 
@@ -158,26 +158,15 @@ extern "C"
     return OnRenderEvent;
   }
 
-  UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UpdateWindowByID(int id)
+  UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SetTexture(int id, void* texture)
   {
     if (!g_manager) {
       return;
     }
     try {
-      g_manager->get_window(id).update();
+      return g_manager->get_window(id).set_texture(reinterpret_cast<ID3D11Resource*>(texture));
     } catch (std::out_of_range&) {
-    }
-  }
-
-  UNITY_INTERFACE_EXPORT void* UNITY_INTERFACE_API GetTexture(int id)
-  {
-    if (!g_manager) {
-      return nullptr;
-    }
-    try {
-      return g_manager->get_window(id).get_texture();
-    } catch (std::out_of_range&) {
-      return nullptr;
+      return;
     }
   }
 

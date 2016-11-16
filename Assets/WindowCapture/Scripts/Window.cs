@@ -38,19 +38,24 @@ namespace WindowCapture
 		private Texture2D texture_;
 		public Texture2D texture
 		{
-			get { return texture_; }
+			get
+			{
+				if (!texture_) {
+					CreateTexture();
+				}
+				return texture_;
+			}
 		}
 
 		public void CreateTexture()
 		{
-			texture_ = Texture2D.CreateExternalTexture(
+			texture_ = new Texture2D(
 				width,
 				height,
 				TextureFormat.BGRA32,
-				false,
-				true,
-				Lib.GetTexture(id)
+				false
 				);
+			Lib.SetTexture(id, texture_.GetNativeTexturePtr());
 		}
 
 		public void Render()

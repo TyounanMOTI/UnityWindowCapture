@@ -25,7 +25,7 @@ namespace WindowCapture
 		public static extern int GetForegroundWindowID();
 
 		[DllImport("WindowCapture")]
-		public static extern IntPtr GetTexture(int id);
+		public static extern void SetTexture(int id, IntPtr texture);
 
 		[DllImport("WindowCapture")]
 		public static extern void UpdateWindowByID(int id);

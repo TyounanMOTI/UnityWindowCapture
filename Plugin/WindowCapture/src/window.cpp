@@ -28,17 +28,14 @@ window::window()
 {
 }
 
-extern IUnityInterfaces* g_unity;
-
 window::window(HWND hwnd)
   : hwnd(hwnd)
 {
-  update();
 }
 
-ID3D11ShaderResourceView* window::get_texture()
+void window::set_texture(ID3D11Resource* texture)
 {
-  return gdi_srv.Get();
+  unity_texture = texture;
 }
 
 int window::get_width()
@@ -60,42 +57,32 @@ UINT window::get_dpi()
   return GetDpiForWindow(hwnd);
 }
 
-void window::update()
-{
-  // ウィンドウサイズ変更に対応するためテクスチャを作り直し
-  // キャプチャした画像を保管しておくGDI Compatibleなテクスチャを作成
-  D3D11_TEXTURE2D_DESC desc;
-  ZeroMemory(&desc, sizeof(desc));
-  desc.Width = get_width();
-  desc.Height = get_height();
-  desc.MipLevels = 1;
-  desc.ArraySize = 1;
-  desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-  desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-  desc.SampleDesc.Count = 1;
-  desc.Usage = D3D11_USAGE_DEFAULT;
-  desc.MiscFlags = D3D11_RESOURCE_MISC_GDI_COMPATIBLE;
-
-  auto device = g_unity->Get<IUnityGraphicsD3D11>()->GetDevice();
-  auto hr = device->CreateTexture2D(&desc, nullptr, gdi_texture.ReleaseAndGetAddressOf());
-  if (FAILED(hr)) {
-    std::runtime_error("Failed to create GDI compatible texture.");
-  }
-
-  D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc;
-  ZeroMemory(&srv_desc, sizeof(srv_desc));
-  srv_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-  srv_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-  srv_desc.Texture2D.MipLevels = 1;
-
-  hr = device->CreateShaderResourceView(gdi_texture.Get(), &srv_desc, gdi_srv.ReleaseAndGetAddressOf());
-  if (FAILED(hr)) {
-    throw std::runtime_error("Failed to create shader resource view.");
-  }
-}
+extern IUnityInterfaces* g_unity;
 
 void window::render()
 {
+  if (!gdi_texture) {
+    // ウィンドウサイズ変更に対応するためテクスチャを作り直し
+    // キャプチャした画像を保管しておくGDI Compatibleなテクスチャを作成
+    D3D11_TEXTURE2D_DESC desc;
+    ZeroMemory(&desc, sizeof(desc));
+    desc.Width = get_width();
+    desc.Height = get_height();
+    desc.MipLevels = 1;
+    desc.ArraySize = 1;
+    desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+    desc.SampleDesc.Count = 1;
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.MiscFlags = D3D11_RESOURCE_MISC_GDI_COMPATIBLE;
+
+    auto device = g_unity->Get<IUnityGraphicsD3D11>()->GetDevice();
+    auto hr = device->CreateTexture2D(&desc, nullptr, &gdi_texture);
+    if (FAILED(hr)) {
+      std::runtime_error("Failed to create GDI compatible texture.");
+    }
+  }
+
   std::unique_ptr<HDC__, std::function<void(HDC)>>
     target_hdc(GetWindowDC(hwnd), [=](HDC x) { ReleaseDC(hwnd, x); });
   if (!target_hdc) {
@@ -129,6 +116,30 @@ void window::render()
   if (err == FALSE) {
     throw std::runtime_error("Failed to BitBlt.");
   }
+
+  D3D11_RESOURCE_DIMENSION gdi_dimension, unity_dimension;
+  gdi_texture->GetType(&gdi_dimension);
+  unity_texture->GetType(&unity_dimension);
+  if (gdi_dimension != unity_dimension) {
+    throw std::runtime_error("Texture dimension is different from Unity texture.");
+  }
+
+  D3D11_TEXTURE2D_DESC gdi_desc, unity_desc;
+  gdi_texture->GetDesc(&gdi_desc);
+  reinterpret_cast<ID3D11Texture2D*>(unity_texture)->GetDesc(&unity_desc);
+  if (gdi_desc.Width != unity_desc.Width
+      || gdi_desc.Height != unity_desc.Height) {
+    throw std::runtime_error("Texture width/height is different from Unity texture.");
+  }
+
+  if (gdi_desc.Format != unity_desc.Format) {
+    throw std::runtime_error("Texture format is different from Unity texture.");
+  }
+
+  auto device = g_unity->Get<IUnityGraphicsD3D11>()->GetDevice();
+  ComPtr<ID3D11DeviceContext> context;
+  device->GetImmediateContext(&context);
+  context->CopyResource(unity_texture, gdi_texture.Get());
 }
 
 }
