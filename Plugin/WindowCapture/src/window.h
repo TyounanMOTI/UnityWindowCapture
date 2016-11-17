@@ -13,16 +13,15 @@ public:
   explicit window(HWND hwnd);
 
   HWND get_hwnd() const { return hwnd; }
-  ID3D11ShaderResourceView* get_texture();
+  void set_texture(ID3D11Resource* texture);
   int get_width();
   int get_height();
   UINT get_dpi();
-  void update();
   void render();
 
 private:
   HWND hwnd;
-  ID3D11Texture2D* unity_texture = nullptr;
+  ID3D11Resource* unity_texture = nullptr;
   Microsoft::WRL::ComPtr<ID3D11Texture2D> gdi_texture;
   Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> gdi_srv;
 };

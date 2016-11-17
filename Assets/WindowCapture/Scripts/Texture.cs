@@ -19,8 +19,7 @@ namespace WindowCapture
 			{
 				window_ = value;
 				material = GetComponent<Renderer>().material; // clone
-				Lib.UpdateWindowByID(window.id);
-				window.CreateTexture();
+				material.mainTexture = window.texture;
 			}
 		}
 
@@ -103,7 +102,6 @@ namespace WindowCapture
 
 		void UpdateMaterial()
 		{
-			material.mainTexture = window.texture;
 			UpdateDimension();
 			Invert();
 			Clip();
