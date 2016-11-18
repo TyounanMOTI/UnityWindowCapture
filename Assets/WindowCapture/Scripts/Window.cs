@@ -60,6 +60,10 @@ namespace WindowCapture
 
 		public void Render()
 		{
+			if (texture_.width != width
+				|| texture_.height != height) {
+				CreateTexture();
+			}
 			GL.IssuePluginEvent(Lib.GetRenderEventFunc(), id);
 		}
 	}

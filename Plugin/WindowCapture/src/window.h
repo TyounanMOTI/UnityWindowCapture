@@ -18,6 +18,7 @@ public:
   int get_height();
   UINT get_dpi();
   void render();
+  void create_texture();
 
 private:
   HWND hwnd;

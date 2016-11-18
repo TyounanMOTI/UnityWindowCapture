@@ -62,24 +62,13 @@ extern IUnityInterfaces* g_unity;
 void window::render()
 {
   if (!gdi_texture) {
-    // ウィンドウサイズ変更に対応するためテクスチャを作り直し
-    // キャプチャした画像を保管しておくGDI Compatibleなテクスチャを作成
-    D3D11_TEXTURE2D_DESC desc;
-    ZeroMemory(&desc, sizeof(desc));
-    desc.Width = get_width();
-    desc.Height = get_height();
-    desc.MipLevels = 1;
-    desc.ArraySize = 1;
-    desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-    desc.BindFlags = D3D11_BIND_RENDER_TARGET;
-    desc.SampleDesc.Count = 1;
-    desc.Usage = D3D11_USAGE_DEFAULT;
-    desc.MiscFlags = D3D11_RESOURCE_MISC_GDI_COMPATIBLE;
-
-    auto device = g_unity->Get<IUnityGraphicsD3D11>()->GetDevice();
-    auto hr = device->CreateTexture2D(&desc, nullptr, &gdi_texture);
-    if (FAILED(hr)) {
-      std::runtime_error("Failed to create GDI compatible texture.");
+    create_texture();
+  } else {
+    D3D11_TEXTURE2D_DESC gdi_desc;
+    gdi_texture->GetDesc(&gdi_desc);
+    if (gdi_desc.Height != get_height()
+        || gdi_desc.Width != get_width()) {
+      create_texture();
     }
   }
 
@@ -142,6 +131,29 @@ void window::render()
   ComPtr<ID3D11DeviceContext> context;
   device->GetImmediateContext(&context);
   context->CopyResource(unity_texture, gdi_texture.Get());
+}
+
+void window::create_texture()
+{
+  // ウィンドウサイズ変更に対応するためテクスチャを作り直し
+  // キャプチャした画像を保管しておくGDI Compatibleなテクスチャを作成
+  D3D11_TEXTURE2D_DESC desc;
+  ZeroMemory(&desc, sizeof(desc));
+  desc.Width = get_width();
+  desc.Height = get_height();
+  desc.MipLevels = 1;
+  desc.ArraySize = 1;
+  desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+  desc.BindFlags = D3D11_BIND_RENDER_TARGET;
+  desc.SampleDesc.Count = 1;
+  desc.Usage = D3D11_USAGE_DEFAULT;
+  desc.MiscFlags = D3D11_RESOURCE_MISC_GDI_COMPATIBLE;
+
+  auto device = g_unity->Get<IUnityGraphicsD3D11>()->GetDevice();
+  auto hr = device->CreateTexture2D(&desc, nullptr, gdi_texture.ReleaseAndGetAddressOf());
+  if (FAILED(hr)) {
+    std::runtime_error("Failed to create GDI compatible texture.");
+  }
 }
 
 }
