@@ -19,7 +19,10 @@ manager::id manager::get_foreground_window_id()
   // 新しいウィンドウの場合
   if (foreground_window_id == invalid_id) {
     window new_window{ hwnd };
-    windows[head_id] = new_window;
+    windows.emplace(std::piecewise_construct,
+                    std::forward_as_tuple(head_id),
+                    std::forward_as_tuple(new_window)
+                    );
     foreground_window_id = head_id;
     ++head_id;
   }
