@@ -18,10 +18,9 @@ manager::id manager::get_foreground_window_id()
 
   // 新しいウィンドウの場合
   if (foreground_window_id == invalid_id) {
-    window new_window{ hwnd };
     windows.emplace(std::piecewise_construct,
                     std::forward_as_tuple(head_id),
-                    std::forward_as_tuple(new_window)
+                    std::forward_as_tuple(hwnd)
                     );
     foreground_window_id = head_id;
     ++head_id;
@@ -152,7 +151,7 @@ extern "C"
     try {
       g_manager->get_window(id).render();
     } catch (std::out_of_range&) {
-//    } catch (std::runtime_error&) {
+    } catch (std::runtime_error&) {
     }
   }
 
