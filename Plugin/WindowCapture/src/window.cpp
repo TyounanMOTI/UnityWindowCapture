@@ -71,7 +71,7 @@ void window::render()
     desc.MipLevels = 1;
     desc.ArraySize = 1;
     desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+    desc.BindFlags = D3D11_BIND_RENDER_TARGET;
     desc.SampleDesc.Count = 1;
     desc.Usage = D3D11_USAGE_DEFAULT;
     desc.MiscFlags = D3D11_RESOURCE_MISC_GDI_COMPATIBLE;
@@ -116,6 +116,8 @@ void window::render()
   if (err == FALSE) {
     throw std::runtime_error("Failed to BitBlt.");
   }
+
+  gdi_hdc.reset();
 
   D3D11_RESOURCE_DIMENSION gdi_dimension, unity_dimension;
   gdi_texture->GetType(&gdi_dimension);
