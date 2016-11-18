@@ -49,6 +49,9 @@ namespace WindowCapture
 
 		public void CreateTexture()
 		{
+			if (width == 0 || height == 0) {
+				return;
+			}
 			texture_ = new Texture2D(
 				width,
 				height,
@@ -60,8 +63,12 @@ namespace WindowCapture
 
 		public void Render()
 		{
-			if (texture_.width != width
-				|| texture_.height != height) {
+			if (width == 0 || height == 0) {
+				// 最小化状態からの復帰時はサイズが０になる
+				return;
+			}
+			if (texture.width != width
+				|| texture.height != height) {
 				CreateTexture();
 			}
 			GL.IssuePluginEvent(Lib.GetRenderEventFunc(), id);

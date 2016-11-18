@@ -19,7 +19,7 @@ namespace WindowCapture
 			{
 				window_ = value;
 				material = GetComponent<Renderer>().material; // clone
-				material.mainTexture = window.texture;
+				material.mainTexture = window_.texture;
 			}
 		}
 

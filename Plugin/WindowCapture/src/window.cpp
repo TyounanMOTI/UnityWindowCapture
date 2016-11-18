@@ -15,6 +15,21 @@ WINDOWINFO get_window_info(HWND hwnd)
   ZeroMemory(&info, sizeof(WINDOWINFO));
   auto status = GetWindowInfo(hwnd, &info);
   if (status == 0) {
+    LPVOID lpMessageBuffer;
+
+    FormatMessage(
+      FORMAT_MESSAGE_ALLOCATE_BUFFER |
+      FORMAT_MESSAGE_FROM_SYSTEM,
+      NULL,
+      GetLastError(),
+      MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),
+      (LPTSTR)&lpMessageBuffer,
+      0,
+      NULL);
+
+    OutputDebugString((LPTSTR)lpMessageBuffer);
+
+    LocalFree(lpMessageBuffer);
     throw std::runtime_error("Failed to get window info.");
   }
   return info;
@@ -31,6 +46,9 @@ window::window()
 window::window(HWND hwnd)
   : hwnd(hwnd)
 {
+  wchar_t filename[256];
+  GetWindowModuleFileName(hwnd, filename, 256);
+  module_file_name = filename;
 }
 
 void window::set_texture(ID3D11Resource* texture)
@@ -61,6 +79,12 @@ extern IUnityInterfaces* g_unity;
 
 void window::render()
 {
+  if (get_width() == 0
+      || get_height() == 0) {
+    // ç≈è¨âªèÛë‘Ç©ÇÁÇÃïúãAéûÇ…ÇÕ width height Ç™0Ç…Ç»ÇÈ
+    return;
+  }
+
   if (!gdi_texture) {
     create_texture();
   } else {

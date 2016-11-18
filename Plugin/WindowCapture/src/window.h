@@ -24,7 +24,7 @@ private:
   HWND hwnd;
   ID3D11Resource* unity_texture = nullptr;
   Microsoft::WRL::ComPtr<ID3D11Texture2D> gdi_texture;
-  Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> gdi_srv;
+  std::wstring module_file_name;
 };
 
 }

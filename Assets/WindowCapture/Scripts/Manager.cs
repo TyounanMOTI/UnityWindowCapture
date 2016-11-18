@@ -23,7 +23,17 @@ namespace WindowCapture
 		{
 			get
 			{
-				return instance.windows_.Find(x => x.id == Lib.GetForegroundWindowID());
+				var id = Lib.GetForegroundWindowID();
+				if (id == -1) {
+					return null;
+				}
+				var window = instance.windows_.Find(x => x.id == id);
+				if (window != null) {
+					return window;
+				}
+				var new_window = new Window(id);
+				instance.windows_.Add(new_window);
+				return new_window;
 			}
 		}
 
